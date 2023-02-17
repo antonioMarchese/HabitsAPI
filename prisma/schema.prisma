@@ -17,6 +17,7 @@ model User {
   last_name  String
   email      String   @unique // cada email só pode ter um usuário cadastrado
   password   String
+  avatar     String?
   created_at DateTime
   updated_at DateTime
   habits     Habit[] // cada user possui vários hábitos

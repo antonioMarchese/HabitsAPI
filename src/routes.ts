@@ -1,23 +1,32 @@
-import dayjs from "dayjs";
-import { FastifyInstance } from "fastify";
+import express from "express";
 import { userController } from "./controllers/user.controller";
 import { habitsController } from "./controllers/habits.controller";
+const multerConfig = require("./config/multer.js");
+const multer = require("multer");
 
-export async function appRoutes(app: FastifyInstance) {
-  // Registro com senha encriptada
-  app.post("/register", userController.register);
-  app.post("/login", userController.login);
+const router = express.Router();
 
-  app.post("/habits", habitsController.create);
+// Registro com senha encriptada
+router.post("/register", userController.register);
+router.post("/login", userController.login);
+router.post(
+  "/user/profile/updateAvatar",
+  multer(multerConfig).single("file"),
+  userController.updateAvatar
+);
+router.put("/users/current", userController.update);
 
-  app.get("/day", habitsController.show);
-  app.get("/userinfo", userController.userinfo);
+router.post("/habits", habitsController.create);
 
-  // completar / não-completar um hábito
-  app.patch("/habits/:id/toggle", habitsController.toggle);
+router.get("/day", habitsController.show);
+router.get("/userinfo", userController.userinfo);
 
-  app.get("/summary", habitsController.summary);
-  app.get("/monthSummary", habitsController.monthSummary);
+// completar / não-completar um hábito
+router.patch("/habits/:id/toggle", habitsController.toggle);
 
-  app.delete("/habits/:id/delete", habitsController.delete);
-}
+router.get("/summary", habitsController.summary);
+router.get("/monthSummary", habitsController.monthSummary);
+
+router.delete("/habits/:id/delete", habitsController.delete);
+
+export { router };
