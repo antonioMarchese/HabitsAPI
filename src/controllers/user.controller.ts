@@ -6,31 +6,36 @@ import { jwtService } from "../services/jwt.service";
 import { userService } from "../services/user.service";
 import { authController, AuthenticatedRequest } from "./auth.controller";
 import { prisma } from "../lib/prisma";
-import { url } from "inspector";
 
 export const userController = {
   // POST /register
   register: async (request: Request, res: Response) => {
     const userBody = z.object({
+      username: z.string(),
       first_name: z.string(),
       last_name: z.string(),
       email: z.string().email(),
+      phone: z.string(),
       password: z.string(),
     });
 
     try {
-      const { first_name, last_name, email, password } = userBody.parse(
-        request.body
-      );
+      const { username, first_name, last_name, phone, email, password } =
+        userBody.parse(request.body);
 
       const userAlredyExists = await userService.findByEmail(email);
+      const usernameAlredyExists = await userService.findByUsername(username);
 
       if (userAlredyExists) throw new Error("Email ja cadastrado.");
+      if (usernameAlredyExists)
+        throw new Error("Nome de usuário indisponível.");
 
       const user = await userService.create({
+        username,
         firstName: first_name,
         lastName: last_name,
         email,
+        phone,
         password,
       });
 
@@ -107,8 +112,10 @@ export const userController = {
           email: request.user!.email,
         },
         select: {
+          username: true,
           first_name: true,
           last_name: true,
+          phone: true,
           email: true,
           created_at: true,
           avatar: true,
@@ -127,7 +134,7 @@ export const userController = {
     const userEmail = req.user!.email;
     const user = await userService.findByEmail(userEmail);
     const userId = user!.id;
-    const { firstName, lastName, email } = req.body;
+    const { username, firstName, lastName, phone, email } = req.body;
 
     if (userEmail !== email) {
       const emailAlredyInUse = await userService.findByEmail(email);
@@ -137,11 +144,21 @@ export const userController = {
         });
     }
 
+    if (username !== user!.username) {
+      const usernameAlredyInUse = await userService.findByUsername(username);
+      if (usernameAlredyInUse)
+        return res.status(401).json({
+          Erro: "Nome de usuário indisponível. Escolha outro ou continue com o seu.",
+        });
+    }
+
     try {
       const updatedUser = await userService.update(userId, {
+        username,
         email,
         firstName,
         lastName,
+        phone,
       });
 
       return res.status(200).json(updatedUser);
@@ -167,5 +184,23 @@ export const userController = {
     } catch (error) {
       return res.status(404).send(error);
     }
+  },
+
+  updatePassword: async (request: AuthenticatedRequest, response: Response) => {
+    await authController.checkToken(request, response);
+    const updatePasswordBody = z.object({
+      password: z.string(),
+      newPassword: z.string(),
+    });
+
+    const { password, newPassword } = updatePasswordBody.parse(request.body);
+    const user = await userService.findByEmail(request.user!.email);
+
+    // Checks if the passwords match
+    const isSame = await bcrypt.compare(password, user!.password);
+    if (!isSame) return response.status(401).send({ Erro: "Senha incorreta." });
+
+    await userService.updatePassword(user!.id, newPassword);
+    return response.status(204).send();
   },
 };
