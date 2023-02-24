@@ -27,6 +27,29 @@ export const habitsController = {
     return reply.status(201).send();
   },
 
+  getAllHabits: async (req: AuthenticatedRequest, res: Response) => {
+    await authController.checkToken(req, res); // Isso eu vou ter q melhorar em algum momento
+    const email = req.user!.email;
+    const user = await userService.findByEmail(email);
+    const habits = await habitService.findAllUserHabits(user!.id);
+    return res.status(200).json({
+      habits,
+    });
+  },
+
+  update: async (req: AuthenticatedRequest, res: Response) => {
+    const updateHabitsParams = z.object({
+      title: z.string(),
+    });
+    await authController.checkToken(req, res); // Isso eu vou ter q melhorar em algum momento
+    const email = req.user!.email;
+    const { title } = updateHabitsParams.parse(req.body);
+    const { id } = req.params;
+    const habit = await habitService.update(id, title);
+
+    return res.status(200).json(habit);
+  },
+
   show: async (request: AuthenticatedRequest, reply: Response) => {
     const getDayParams = z.object({
       date: z.coerce.date(),

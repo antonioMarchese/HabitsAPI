@@ -26,9 +26,12 @@ export const userController = {
       const userAlredyExists = await userService.findByEmail(email);
       const usernameAlredyExists = await userService.findByUsername(username);
 
-      if (userAlredyExists) throw new Error("Email ja cadastrado.");
+      if (userAlredyExists)
+        return res.status(400).json({ message: "Email ja cadastrado." });
       if (usernameAlredyExists)
-        throw new Error("Nome de usuário indisponível.");
+        return res
+          .status(402)
+          .json({ message: "Nome de usuário indisponível." });
 
       const user = await userService.create({
         username,
@@ -134,7 +137,7 @@ export const userController = {
     const userEmail = req.user!.email;
     const user = await userService.findByEmail(userEmail);
     const userId = user!.id;
-    const { username, firstName, lastName, phone, email } = req.body;
+    const { username, firstName, lastName, phone, email, avatar } = req.body;
 
     if (userEmail !== email) {
       const emailAlredyInUse = await userService.findByEmail(email);
@@ -159,6 +162,7 @@ export const userController = {
         firstName,
         lastName,
         phone,
+        avatar,
       });
 
       return res.status(200).json(updatedUser);
@@ -169,7 +173,10 @@ export const userController = {
   },
 
   updateAvatar: async (request: any, res: Response) => {
+    await authController.checkToken(request, res);
+
     try {
+      console.log(request);
       const email = request.user!.email;
       const avatar = String(request.file.filename);
       const user = await prisma.user.update({

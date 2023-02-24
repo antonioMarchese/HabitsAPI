@@ -1,7 +1,6 @@
 import express from "express";
 import { userController } from "./controllers/user.controller";
 import { habitsController } from "./controllers/habits.controller";
-import { authController } from "./controllers/auth.controller";
 const multerConfig = require("./config/multer.js");
 const multer = require("multer");
 
@@ -19,9 +18,13 @@ router.post(
 router.put("/users/current", userController.update);
 router.put("/users/current/password", userController.updatePassword);
 
+// Criação de hábitos
 router.post("/habits", habitsController.create);
 
+// Todos os hábitos de um dia
 router.get("/day", habitsController.show);
+
+// Informações do usuário
 router.get("/userinfo", userController.userinfo);
 
 // completar / não-completar um hábito
@@ -29,6 +32,12 @@ router.patch("/habits/:id/toggle", habitsController.toggle);
 
 router.get("/summary", habitsController.summary);
 router.get("/monthSummary", habitsController.monthSummary);
+
+// GET todos os hábitos do usuário
+router.get("/users/habits", habitsController.getAllHabits);
+
+// Atualiza um determinado hábito
+router.put("/users/habits/:id/update", habitsController.update);
 
 router.delete("/habits/:id/delete", habitsController.delete);
 

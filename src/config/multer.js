@@ -10,15 +10,19 @@ module.exports = {
     },
     filename: (req, file, cb) => {
       crypto.randomBytes(16, (err, hash) => {
-        if (err) cb(err);
+        if (err) {
+          console.log(err);
+          cb(err);
+        }
 
         const fileName = `${hash.toString("hex")}-${file.originalname}`;
+
         cb(null, fileName);
       });
     },
   }),
   limits: {
-    fileSize: 2 * 1024 * 1024, // 2MB
+    fieldSize: 10 * 1024 * 1024, // 10MB
   },
   fileFilter: (req, file, cb) => {
     const allowedMimes = [

@@ -45,6 +45,32 @@ export const habitService = {
     }
   },
 
+  findAllUserHabits: async (id: string) => {
+    const habits = await prisma.habit.findMany({
+      where: {
+        user_id: id,
+      },
+
+      orderBy: {
+        title: "asc",
+      },
+    });
+
+    return habits;
+  },
+
+  update: async (id: string, title: string) => {
+    const habit = await prisma.habit.update({
+      where: {
+        id,
+      },
+      data: {
+        title,
+      },
+    });
+    return habit;
+  },
+
   findPossibleHabits: async (date: Date, user_id: string) => {
     const parsedDate = dayjs(date).startOf("day");
     const weekDay = parsedDate.get("day");

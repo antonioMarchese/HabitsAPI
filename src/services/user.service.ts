@@ -68,6 +68,7 @@ export const userService = {
       firstName: string;
       lastName: string;
       email: string;
+      avatar: string;
     }
   ) => {
     const res = await prisma.user.update({
@@ -80,6 +81,8 @@ export const userService = {
         last_name: attributes.lastName,
         phone: attributes.phone,
         email: attributes.email,
+        avatar: attributes.avatar,
+        updated_at: new Date(),
       },
     });
 
