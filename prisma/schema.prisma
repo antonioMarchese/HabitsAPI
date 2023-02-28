@@ -32,6 +32,7 @@ model Habit {
   id         String          @id @default(uuid())
   title      String
   created_at DateTime
+  deleted_at DateTime?
   dayHabits  DayHabit[] // isso não é um campo! é para o javascript
   weekDays   HabitWeekDays[]
   user_id    String

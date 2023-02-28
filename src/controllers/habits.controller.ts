@@ -127,5 +127,6 @@ export const habitsController = {
     if (!user) return reply.status(401).json("Usuário não registrado");
 
     await habitService.deleteHabit(id);
+    return reply.status(200).send();
   },
 };

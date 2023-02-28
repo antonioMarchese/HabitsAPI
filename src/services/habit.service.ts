@@ -50,7 +50,15 @@ export const habitService = {
       where: {
         user_id: id,
       },
-
+      select: {
+        id: true,
+        title: true,
+        weekDays: {
+          select: {
+            week_day: true,
+          },
+        },
+      },
       orderBy: {
         title: "asc",
       },
@@ -82,6 +90,16 @@ export const habitService = {
         created_at: {
           lte: date, // habitos criados com a data menor ou igual à data atual
         },
+        OR: [
+          {
+            deleted_at: {
+              gt: date,
+            },
+          },
+          {
+            deleted_at: null,
+          },
+        ],
         weekDays: {
           some: {
             week_day: weekDay,
@@ -242,9 +260,13 @@ export const habitService = {
   },
 
   deleteHabit: async (habitId: string) => {
-    await prisma.habit.delete({
+    const today = dayjs().startOf("day").toDate();
+    await prisma.habit.update({
       where: {
         id: habitId,
+      },
+      data: {
+        deleted_at: today,
       },
     });
   },
