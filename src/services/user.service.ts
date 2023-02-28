@@ -9,6 +9,7 @@ interface CreateUserProps {
   email: string;
   phone: string;
   password: string;
+  avatar?: string;
 }
 
 export const userService = {
@@ -54,6 +55,7 @@ export const userService = {
         password: hashedPassword,
         created_at: today,
         updated_at: today,
+        avatar: props.avatar,
       },
     });
 
