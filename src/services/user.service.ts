@@ -32,7 +32,7 @@ export const userService = {
         username,
       },
       include: {
-        habits: true,
+        habits: false,
       },
     });
 

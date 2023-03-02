@@ -6,42 +6,41 @@ const multer = require("multer");
 
 const router = express.Router();
 
-// Registro com senha encriptada
+// Rotas de usuários
+
 router.post("/register", userController.register);
 router.post("/login", userController.login);
 router.post("/loginWithToken", userController.loginWithToken);
-router.post(
-  "/user/profile/updateAvatar",
-  multer(multerConfig).single("file"),
-  userController.updateAvatar
-);
+// Atualizar informações
 router.put("/users/current", userController.update);
+// Atualizar senha
 router.put("/users/current/password", userController.updatePassword);
-
-// Criação de hábitos
-router.post("/habits", habitsController.create);
-
-router.get("/habit/:id", habitsController.habitInfo);
-
-// Todos os hábitos de um dia
-router.get("/day", habitsController.show);
-
+// Seguir ou parar de seguir um usuário
+router.patch("/users/:username/follow", userController.followUser);
+// Informações de seguidor
+router.get("/users/:username/userinfo", userController.followerInfo);
 // Informações do usuário
 router.get("/userinfo", userController.userinfo);
 
+// ROtas de hábitos
+
+// Criação de hábitos
+router.post("/habits", habitsController.create);
+// Informações do hábito
+router.get("/habit/:id", habitsController.habitInfo);
+// Todos os hábitos de um dia
+router.get("/day", habitsController.show);
 // completar / não-completar um hábito
 router.patch("/habits/:id/toggle", habitsController.toggle);
-
+// Relatórios de hábitos
 router.get("/summary", habitsController.summary);
 router.get("/weekSummary", habitsController.weekInfo);
 router.get("/monthSummary", habitsController.monthSummary);
-
 // GET todos os hábitos do usuário
 router.get("/users/habits", habitsController.getAllHabits);
-
-// Atualiza um determinado hábito
+// Atualiza as informações de um determinado hábito
 router.put("/users/habits/:id/update", habitsController.update);
-
+// Deleta um certo hábito
 router.delete("/habits/:id/delete", habitsController.delete);
 
 export { router };

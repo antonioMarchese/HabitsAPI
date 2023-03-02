@@ -6,6 +6,7 @@ import { jwtService } from "../services/jwt.service";
 import { userService } from "../services/user.service";
 import { authController, AuthenticatedRequest } from "./auth.controller";
 import { prisma } from "../lib/prisma";
+import { followService } from "../services/follow.service";
 
 export const userController = {
   // POST /register
@@ -122,6 +123,7 @@ export const userController = {
   // GET /userinfo
   userinfo: async (request: AuthenticatedRequest, res: Response) => {
     await authController.checkToken(request, res);
+
     try {
       const user = await prisma.user.findUnique({
         where: {
@@ -135,8 +137,55 @@ export const userController = {
           email: true,
           created_at: true,
           avatar: true,
+          followers: {
+            select: {
+              username: true,
+            },
+          },
+          following: {
+            select: {
+              username: true,
+            },
+          },
         },
       });
+      return res.status(200).send(user);
+    } catch (error) {
+      if (error instanceof Error) return res.status(400).send(error);
+      return res.status(500).send(error);
+    }
+  },
+
+  // GET /followerinfo
+  followerInfo: async (request: AuthenticatedRequest, res: Response) => {
+    try {
+      const { username } = request.params;
+      const user = await prisma.user.findUnique({
+        where: {
+          username,
+        },
+        select: {
+          username: true,
+          first_name: true,
+          last_name: true,
+          phone: true,
+          email: true,
+          created_at: true,
+          avatar: true,
+          followers: {
+            select: {
+              username: true,
+            },
+          },
+          following: {
+            select: {
+              username: true,
+            },
+          },
+        },
+      });
+      if (!user)
+        return res.status(404).json({ erro: "Usuário não encontrado." });
       return res.status(200).send(user);
     } catch (error) {
       if (error instanceof Error) return res.status(400).send(error);
@@ -226,6 +275,21 @@ export const userController = {
         return response.status(401).send({ Erro: "Senha incorreta." });
 
       await userService.updatePassword(user!.id, newPassword);
+      return response.status(200).send();
+    } catch (error) {
+      if (error instanceof Error) {
+        return response.status(400).send({ message: error.message });
+      }
+      return response.status(400).json(error);
+    }
+  },
+
+  followUser: async (request: AuthenticatedRequest, response: Response) => {
+    await authController.checkToken(request, response);
+
+    try {
+      const { username } = request.params;
+      await followService.toggleFollow(username, request.user!.email);
       return response.status(200).send();
     } catch (error) {
       if (error instanceof Error) {

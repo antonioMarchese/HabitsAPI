@@ -16,7 +16,7 @@ model User {
 
   first_name String
   last_name  String
-  email      String   @unique // cada email só pode ter um usuário cadastrado
+  email      String      @unique // cada email só pode ter um usuário cadastrado
   password   String
   avatar     String?
   phone      String?
@@ -24,6 +24,8 @@ model User {
   updated_at DateTime
   habits     Habit[] // cada user possui vários hábitos
   Day        Day[] // cada usuário pode ter vários dias relacionados 
+  followers  Follower[] // Cada usuário pode ter vários seguidores
+  following  Following[] // Cada usuário pode seguir vários outros 
 
   @@map("users")
 }
@@ -76,4 +78,24 @@ model DayHabit {
 
   @@unique([day_id, habit_id])
   @@map("day_habits")
+}
+
+model Follower {
+  username String
+  user_id  String
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, username])
+  @@map("follower")
+}
+
+model Following {
+  username String
+  user_id  String
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, username])
+  @@map("following")
 }
