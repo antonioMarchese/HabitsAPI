@@ -21,6 +21,8 @@ router.put("/users/current/password", userController.updatePassword);
 // Criação de hábitos
 router.post("/habits", habitsController.create);
 
+router.get("/habit/:id", habitsController.habitInfo);
+
 // Todos os hábitos de um dia
 router.get("/day", habitsController.show);
 
@@ -31,6 +33,7 @@ router.get("/userinfo", userController.userinfo);
 router.patch("/habits/:id/toggle", habitsController.toggle);
 
 router.get("/summary", habitsController.summary);
+router.get("/weekSummary", habitsController.weekInfo);
 router.get("/monthSummary", habitsController.monthSummary);
 
 // GET todos os hábitos do usuário

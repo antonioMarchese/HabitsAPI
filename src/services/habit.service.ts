@@ -8,6 +8,21 @@ interface CreateHabitsProps {
 }
 
 export const habitService = {
+  findById: async (id: string) => {
+    const habit = await prisma.habit.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        weekDays: {
+          select: {
+            week_day: true,
+          },
+        },
+      },
+    });
+    return habit;
+  },
   create: async ({ user_id, title, weekDays }: CreateHabitsProps) => {
     const today = dayjs().startOf("day").toDate(); // starOf('day') zera as horas e minutos do dia
 
@@ -67,15 +82,31 @@ export const habitService = {
     return habits;
   },
 
-  update: async (id: string, title: string) => {
+  update: async (id: string, title: string, weekDays: number[]) => {
+    // Deleta os dias de antes
+
+    await prisma.habitWeekDays.deleteMany({
+      where: {
+        habit_id: id,
+      },
+    });
+
     const habit = await prisma.habit.update({
       where: {
         id,
       },
       data: {
         title,
+        weekDays: {
+          create: weekDays.map((day) => {
+            return {
+              week_day: day,
+            };
+          }),
+        },
       },
     });
+
     return habit;
   },
 
@@ -117,6 +148,7 @@ export const habitService = {
   },
   findCompletedHabits: async (date: Date, user_id: string) => {
     const parsedDate = dayjs(date).startOf("day");
+    const weekDay = parsedDate.get("day");
     // Habitos ja completados
     const day = await prisma.day.findUnique({
       where: {
@@ -139,7 +171,7 @@ export const habitService = {
   },
 
   // id = habitId
-  toggle: async (id: string, user_id: string) => {
+  toggle: async (id: string, user_id: string, onDelete?: boolean) => {
     const today = dayjs().startOf("day").toDate();
 
     let day = await prisma.day.findUnique({
@@ -177,13 +209,15 @@ export const habitService = {
         },
       });
     } else {
-      // Completar o hábito
-      await prisma.dayHabit.create({
-        data: {
-          day_id: day.id,
-          habit_id: id,
-        },
-      });
+      if (!onDelete) {
+        // Completar o hábito
+        await prisma.dayHabit.create({
+          data: {
+            day_id: day.id,
+            habit_id: id,
+          },
+        });
+      }
     }
   },
 
@@ -259,8 +293,44 @@ export const habitService = {
     return summary;
   },
 
-  deleteHabit: async (habitId: string) => {
+  getWeekCompleted: async (date: Date, user_id: string) => {
+    const parsedDate = dayjs(date).startOf("week").toDate();
+    const weekEnd = dayjs(date).endOf("week").toDate();
+    // Habitos ja completados
+    const day = await prisma.day.findMany({
+      where: {
+        user_id,
+        AND: [
+          {
+            date: {
+              gte: parsedDate,
+            },
+          },
+          {
+            date: {
+              lte: weekEnd,
+            },
+          },
+        ],
+      },
+      include: {
+        dayHabits: true,
+      },
+    });
+
+    const completedHabits =
+      day?.map((day) =>
+        day.dayHabits.map((dayHabit) => {
+          return dayHabit.habit_id;
+        })
+      ) ?? [];
+
+    return completedHabits;
+  },
+
+  deleteHabit: async (habitId: string, userId: string) => {
     const today = dayjs().startOf("day").toDate();
+    await habitService.toggle(habitId, userId, true);
     await prisma.habit.update({
       where: {
         id: habitId,

@@ -14,16 +14,26 @@ export const userController = {
       username: z.string(),
       first_name: z.string(),
       last_name: z.string(),
-      email: z.string().email(),
+      email: z.string(),
       phone: z.string(),
       password: z.string(),
+      avatar: z.string(),
     });
 
     try {
-      const { username, first_name, last_name, phone, email, password } =
-        userBody.parse(request.body);
+      const {
+        username,
+        first_name,
+        last_name,
+        phone,
+        email,
+        password,
+        avatar,
+      } = userBody.parse(request.body);
 
-      const userAlredyExists = await userService.findByEmail(email);
+      const userAlredyExists = await userService.findByEmail(
+        email.toLowerCase()
+      );
       const usernameAlredyExists = await userService.findByUsername(username);
 
       if (userAlredyExists)
@@ -37,9 +47,10 @@ export const userController = {
         username,
         firstName: first_name,
         lastName: last_name,
-        email,
+        email: email.toLowerCase(),
         phone,
         password,
+        avatar,
       });
 
       return res.status(201).json(user);
@@ -52,15 +63,15 @@ export const userController = {
   // POST /login
   login: async (req: Request, res: Response) => {
     const userBody = z.object({
-      email: z.string().email(),
+      email: z.string(),
       password: z.string(),
     });
 
     const { email, password } = userBody.parse(req.body);
     try {
       // Checks if the user exists
-      const user = await userService.findByEmail(email);
-      if (!user) return res.status(404).send("Usuário não cadastrado.");
+      const user = await userService.findByEmail(email.toLowerCase());
+      if (!user) return res.status(401).send("Usuário não cadastrado.");
 
       // Checks if the passwords match
       const isSame = await bcrypt.compare(password, user.password);
@@ -87,7 +98,9 @@ export const userController = {
     await authController.checkToken(request, res);
 
     try {
-      const user = await userService.findByEmail(request.user!.email);
+      const user = await userService.findByEmail(
+        request.user!.email.toLowerCase()
+      );
       if (!user) return res.status(404).send("Usuário não encontrado.");
 
       const payload = {
@@ -167,7 +180,8 @@ export const userController = {
 
       return res.status(200).json(updatedUser);
     } catch (error) {
-      if (error instanceof Error) return res.status(400).send(error);
+      if (error instanceof Error)
+        return res.status(400).send({ message: error.message });
       return res.status(500).send(error);
     }
   },
@@ -189,6 +203,9 @@ export const userController = {
       });
       return res.status(200).json(user);
     } catch (error) {
+      if (error instanceof Error) {
+        return res.status(400).send({ message: error.message });
+      }
       return res.status(404).send(error);
     }
   },
@@ -199,15 +216,22 @@ export const userController = {
       password: z.string(),
       newPassword: z.string(),
     });
+    try {
+      const { password, newPassword } = updatePasswordBody.parse(request.body);
+      const user = await userService.findByEmail(request.user!.email);
 
-    const { password, newPassword } = updatePasswordBody.parse(request.body);
-    const user = await userService.findByEmail(request.user!.email);
+      // Checks if the passwords match
+      const isSame = await bcrypt.compare(password, user!.password);
+      if (!isSame)
+        return response.status(401).send({ Erro: "Senha incorreta." });
 
-    // Checks if the passwords match
-    const isSame = await bcrypt.compare(password, user!.password);
-    if (!isSame) return response.status(401).send({ Erro: "Senha incorreta." });
-
-    await userService.updatePassword(user!.id, newPassword);
-    return response.status(204).send();
+      await userService.updatePassword(user!.id, newPassword);
+      return response.status(200).send();
+    } catch (error) {
+      if (error instanceof Error) {
+        return response.status(400).send({ message: error.message });
+      }
+      return response.status(400).json(error);
+    }
   },
 };
