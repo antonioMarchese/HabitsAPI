@@ -223,8 +223,6 @@ export const habitService = {
 
   getUserSummary: async (user_id: string) => {
     // [ { date: 17/01, amountPossible: 5, completed: 1 }, {date: 18/01, amoutPossible: 2, completed: 2}, {} ]
-    const monthBeg = dayjs(new Date()).startOf("month").toDate();
-    const monthEnd = dayjs(new Date()).endOf("month").toDate();
     // Para querys mais complexas é preciso escrever em SQL
     const summary = await prisma.$queryRaw`
     SELECT 

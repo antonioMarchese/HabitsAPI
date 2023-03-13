@@ -19,8 +19,12 @@ router.put("/users/current/password", userController.updatePassword);
 router.patch("/users/:username/follow", userController.followUser);
 // Informações de seguidor
 router.get("/users/:username/userinfo", userController.followerInfo);
+// Pesquisa por usuários
+router.get("/users/search", userController.search);
 // Informações do usuário
 router.get("/userinfo", userController.userinfo);
+// Informações do usuário
+router.get("/followinfo", userController.followInfo);
 
 // ROtas de hábitos
 
@@ -33,7 +37,7 @@ router.get("/day", habitsController.show);
 // completar / não-completar um hábito
 router.patch("/habits/:id/toggle", habitsController.toggle);
 // Relatórios de hábitos
-router.get("/summary", habitsController.summary);
+router.get("/summary", habitsController.followSummary);
 router.get("/weekSummary", habitsController.weekInfo);
 router.get("/monthSummary", habitsController.monthSummary);
 // GET todos os hábitos do usuário
