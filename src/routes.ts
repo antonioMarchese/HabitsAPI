@@ -6,42 +6,45 @@ const multer = require("multer");
 
 const router = express.Router();
 
-// Registro com senha encriptada
+// Rotas de usuários
+
 router.post("/register", userController.register);
 router.post("/login", userController.login);
 router.post("/loginWithToken", userController.loginWithToken);
-router.post(
-  "/user/profile/updateAvatar",
-  multer(multerConfig).single("file"),
-  userController.updateAvatar
-);
+// Atualizar informações
 router.put("/users/current", userController.update);
+// Atualizar senha
 router.put("/users/current/password", userController.updatePassword);
+// Seguir ou parar de seguir um usuário
+router.patch("/users/:username/follow", userController.followUser);
+// Informações de seguidor
+router.get("/users/:username/userinfo", userController.followerInfo);
+// Pesquisa por usuários
+router.get("/users/search", userController.search);
+// Informações do usuário
+router.get("/userinfo", userController.userinfo);
+// Informações do usuário
+router.get("/followinfo", userController.followInfo);
+
+// ROtas de hábitos
 
 // Criação de hábitos
 router.post("/habits", habitsController.create);
-
+// Informações do hábito
 router.get("/habit/:id", habitsController.habitInfo);
-
 // Todos os hábitos de um dia
 router.get("/day", habitsController.show);
-
-// Informações do usuário
-router.get("/userinfo", userController.userinfo);
-
 // completar / não-completar um hábito
 router.patch("/habits/:id/toggle", habitsController.toggle);
-
-router.get("/summary", habitsController.summary);
+// Relatórios de hábitos
+router.get("/summary", habitsController.followSummary);
 router.get("/weekSummary", habitsController.weekInfo);
 router.get("/monthSummary", habitsController.monthSummary);
-
 // GET todos os hábitos do usuário
 router.get("/users/habits", habitsController.getAllHabits);
-
-// Atualiza um determinado hábito
+// Atualiza as informações de um determinado hábito
 router.put("/users/habits/:id/update", habitsController.update);
-
+// Deleta um certo hábito
 router.delete("/habits/:id/delete", habitsController.delete);
 
 export { router };

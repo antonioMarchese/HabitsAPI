@@ -6,6 +6,8 @@ import { jwtService } from "../services/jwt.service";
 import { userService } from "../services/user.service";
 import { authController, AuthenticatedRequest } from "./auth.controller";
 import { prisma } from "../lib/prisma";
+import { followService } from "../services/follow.service";
+import { JwtPayload } from "jsonwebtoken";
 
 export const userController = {
   // POST /register
@@ -71,7 +73,7 @@ export const userController = {
     try {
       // Checks if the user exists
       const user = await userService.findByEmail(email.toLowerCase());
-      if (!user) return res.status(401).send("Usuário não cadastrado.");
+      if (!user) return res.status(404).send("Usuário não cadastrado.");
 
       // Checks if the passwords match
       const isSame = await bcrypt.compare(password, user.password);
@@ -94,34 +96,44 @@ export const userController = {
   },
 
   // POST /loginWithToken
-  loginWithToken: async (request: AuthenticatedRequest, res: Response) => {
-    await authController.checkToken(request, res);
+  loginWithToken: async (request: Request, res: Response) => {
+    const { token } = request.body;
 
-    try {
-      const user = await userService.findByEmail(
-        request.user!.email.toLowerCase()
-      );
-      if (!user) return res.status(404).send("Usuário não encontrado.");
+    jwtService.verifyToken(token, async (err, decoded) => {
+      if (err || typeof decoded === "undefined")
+        return res
+          .status(401)
+          .json({ message: "Não autorizado: token inválido" });
 
-      const payload = {
-        id: user.id,
-        firstName: user.first_name,
-        email: user.email,
-      };
+      const email = (decoded as JwtPayload).email;
+      const user = await userService.findByEmail(email);
+      if (!user)
+        return res
+          .status(401)
+          .json({ message: "Não autorizado: token inválido" });
+      try {
+        const payload = {
+          id: user.id,
+          firstName: user.first_name,
+          email: user.email,
+        };
 
-      const token = jwtService.signToken(payload, "1d");
+        const token = jwtService.signToken(payload, "1d");
 
-      return res.status(200).send({ authenticated: true, ...payload, token });
-    } catch (error) {
-      if (error instanceof Error) {
-        return res.status(400).send({ message: error.message });
+        return res.status(200).send({ authenticated: true, ...payload, token });
+      } catch (error) {
+        if (error instanceof Error) {
+          return res.status(400).send({ message: error.message });
+        }
+        return res.status(401).send();
       }
-    }
+    });
   },
 
   // GET /userinfo
   userinfo: async (request: AuthenticatedRequest, res: Response) => {
     await authController.checkToken(request, res);
+
     try {
       const user = await prisma.user.findUnique({
         where: {
@@ -135,6 +147,79 @@ export const userController = {
           email: true,
           created_at: true,
           avatar: true,
+          followers: {
+            select: {
+              username: true,
+            },
+          },
+          following: {
+            select: {
+              username: true,
+            },
+          },
+        },
+      });
+      return res.status(200).send(user);
+    } catch (error) {
+      if (error instanceof Error) return res.status(400).send(error);
+      return res.status(500).send(error);
+    }
+  },
+
+  // GET /followerinfo
+  followerInfo: async (request: Request, res: Response) => {
+    try {
+      const { username } = request.params;
+      const user = await prisma.user.findUnique({
+        where: {
+          username,
+        },
+        select: {
+          username: true,
+          first_name: true,
+          last_name: true,
+          created_at: true,
+          avatar: true,
+          followers: {
+            select: {
+              username: true,
+            },
+          },
+          following: {
+            select: {
+              username: true,
+            },
+          },
+        },
+      });
+      if (!user)
+        return res.status(404).json({ erro: "Usuário não encontrado." });
+      return res.status(200).send(user);
+    } catch (error) {
+      if (error instanceof Error) return res.status(400).send(error);
+      return res.status(500).send(error);
+    }
+  },
+
+  followInfo: async (request: AuthenticatedRequest, res: Response) => {
+    await authController.checkToken(request, res);
+
+    try {
+      const user = await prisma.user.findUnique({
+        where: {
+          email: request.user!.email,
+        },
+        select: {
+          followers: {
+            select: {
+              username: true,
+            },
+          },
+          following: {
+            select: {
+              username: true,
+            },
+          },
         },
       });
       return res.status(200).send(user);
@@ -227,6 +312,36 @@ export const userController = {
 
       await userService.updatePassword(user!.id, newPassword);
       return response.status(200).send();
+    } catch (error) {
+      if (error instanceof Error) {
+        return response.status(400).send({ message: error.message });
+      }
+      return response.status(400).json(error);
+    }
+  },
+
+  followUser: async (request: AuthenticatedRequest, response: Response) => {
+    await authController.checkToken(request, response);
+
+    try {
+      const { username } = request.params;
+      await followService.toggleFollow(username, request.user!.email);
+      return response.status(200).send();
+    } catch (error) {
+      if (error instanceof Error) {
+        return response.status(400).send({ message: error.message });
+      }
+      return response.status(400).json(error);
+    }
+  },
+
+  search: async (request: AuthenticatedRequest, response: Response) => {
+    await authController.checkToken(request, response);
+    try {
+      const users = await userService.search();
+      return response.status(200).json({
+        users,
+      });
     } catch (error) {
       if (error instanceof Error) {
         return response.status(400).send({ message: error.message });

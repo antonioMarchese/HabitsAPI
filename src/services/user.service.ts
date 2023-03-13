@@ -32,7 +32,7 @@ export const userService = {
         username,
       },
       include: {
-        habits: true,
+        habits: false,
       },
     });
 
@@ -101,5 +101,29 @@ export const userService = {
         password: hashedPassword,
       },
     });
+  },
+
+  search: async () => {
+    const users = await prisma.user.findMany({
+      select: {
+        first_name: true,
+        last_name: true,
+        avatar: true,
+        username: true,
+        followers: {
+          select: {
+            username: true,
+          },
+        },
+        following: {
+          select: {
+            username: true,
+          },
+        },
+      },
+      orderBy: { first_name: "asc" },
+    });
+
+    return users;
   },
 };

@@ -118,14 +118,26 @@ export const habitsController = {
     }
   },
 
-  summary: async (request: AuthenticatedRequest, reply: Response) => {
+  followSummary: async (request: AuthenticatedRequest, reply: Response) => {
     await authController.checkToken(request, reply);
+    const getDayParams = z.object({
+      date: z.coerce.date().optional(),
+      username: z.string(),
+    });
     try {
-      const user = await userService.findByEmail(request.user!.email);
+      const { date, username } = getDayParams.parse(request.query);
 
+      const user = await userService.findByUsername(username);
       const user_id = user!.id;
-      const summary = await habitService.getUserSummary(user_id);
-      return reply.status(201).json(summary);
+      const monthSummary = await habitService.getUserMonthSummary(
+        user_id,
+        date
+      );
+      const month = date ? dayjs(date).month() : dayjs().month();
+      return reply.status(201).json({
+        month,
+        monthSummary,
+      });
     } catch (error) {
       if (error instanceof Error) {
         return reply.status(400).send({ message: error.message });

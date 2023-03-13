@@ -2,6 +2,7 @@ import { User } from "@prisma/client";
 import { Request, Response } from "express";
 import { JwtPayload } from "jsonwebtoken";
 import { jwtService } from "../services/jwt.service";
+import { userService } from "../services/user.service";
 
 export interface AuthenticatedRequest extends Request {
   user?: { email: string } | null;
