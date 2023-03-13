@@ -15,6 +15,6 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(router);
 
-app.listen(3333, "0.0.0.0", () => {
+app.listen(3333, () => {
   console.log("Server running at port 3333");
 });
