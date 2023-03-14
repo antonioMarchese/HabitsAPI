@@ -21,10 +21,7 @@ export const habitsController = {
 
       await habitService.create({ user_id: user!.id, title, weekDays });
     } catch (error) {
-      if (error instanceof Error) {
-        return reply.status(400).send({ message: error.message });
-      }
-      return reply.status(404).json({ mensagem: error });
+      return reply.status(500).json({ mensagem: error });
     }
 
     return reply.status(201).send();
@@ -40,9 +37,6 @@ export const habitsController = {
         habits,
       });
     } catch (error) {
-      if (error instanceof Error) {
-        return res.status(400).send({ message: error.message });
-      }
       return res.status(400).json(error);
     }
   },
@@ -60,9 +54,6 @@ export const habitsController = {
 
       return res.status(200).json(habit);
     } catch (error) {
-      if (error instanceof Error) {
-        return res.status(400).send({ message: error.message });
-      }
       return res.status(400).json(error);
     }
   },
@@ -92,9 +83,6 @@ export const habitsController = {
         completedHabits,
       });
     } catch (error) {
-      if (error instanceof Error) {
-        return reply.status(400).send({ message: error.message });
-      }
       return reply.status(400).json(error);
     }
   },
@@ -111,9 +99,6 @@ export const habitsController = {
       await habitService.toggle(id, user!.id);
       return reply.status(200).send();
     } catch (error) {
-      if (error instanceof Error) {
-        return reply.status(400).send({ message: error.message });
-      }
       return reply.status(400).json(error);
     }
   },
@@ -139,9 +124,6 @@ export const habitsController = {
         monthSummary,
       });
     } catch (error) {
-      if (error instanceof Error) {
-        return reply.status(400).send({ message: error.message });
-      }
       return reply.status(400).json(error);
     }
   },
@@ -165,10 +147,7 @@ export const habitsController = {
         monthSummary,
       });
     } catch (error) {
-      if (error instanceof Error) {
-        return reply.status(400).send({ message: error.message });
-      }
-      return reply.status(400).json(error);
+      return reply.status(500).json(error);
     }
   },
 
@@ -186,9 +165,6 @@ export const habitsController = {
       await habitService.deleteHabit(id, user.id);
       return reply.status(200).send();
     } catch (error) {
-      if (error instanceof Error) {
-        return reply.status(400).send({ message: error.message });
-      }
       return reply.status(400).json(error);
     }
   },
@@ -200,9 +176,6 @@ export const habitsController = {
       const habit = await habitService.findById(id);
       return response.status(200).json(habit);
     } catch (error) {
-      if (error instanceof Error) {
-        return response.status(400).send({ message: error.message });
-      }
       return response.status(400).json(error);
     }
   },
@@ -222,9 +195,6 @@ export const habitsController = {
       );
       return response.status(200).json({ completedHabits });
     } catch (error) {
-      if (error instanceof Error) {
-        return response.status(400).send({ message: error.message });
-      }
       return response.status(400).json(error);
     }
   },

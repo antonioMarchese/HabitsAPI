@@ -122,10 +122,7 @@ export const userController = {
 
         return res.status(200).send({ authenticated: true, ...payload, token });
       } catch (error) {
-        if (error instanceof Error) {
-          return res.status(400).send({ message: error.message });
-        }
-        return res.status(401).send();
+        return res.status(500).json(error);
       }
     });
   },
@@ -161,7 +158,6 @@ export const userController = {
       });
       return res.status(200).send(user);
     } catch (error) {
-      if (error instanceof Error) return res.status(400).send(error);
       return res.status(500).send(error);
     }
   },
@@ -196,7 +192,6 @@ export const userController = {
         return res.status(404).json({ erro: "Usuário não encontrado." });
       return res.status(200).send(user);
     } catch (error) {
-      if (error instanceof Error) return res.status(400).send(error);
       return res.status(500).send(error);
     }
   },
@@ -224,7 +219,6 @@ export const userController = {
       });
       return res.status(200).send(user);
     } catch (error) {
-      if (error instanceof Error) return res.status(400).send(error);
       return res.status(500).send(error);
     }
   },
@@ -288,9 +282,6 @@ export const userController = {
       });
       return res.status(200).json(user);
     } catch (error) {
-      if (error instanceof Error) {
-        return res.status(400).send({ message: error.message });
-      }
       return res.status(404).send(error);
     }
   },
@@ -313,9 +304,6 @@ export const userController = {
       await userService.updatePassword(user!.id, newPassword);
       return response.status(200).send();
     } catch (error) {
-      if (error instanceof Error) {
-        return response.status(400).send({ message: error.message });
-      }
       return response.status(400).json(error);
     }
   },
@@ -328,9 +316,6 @@ export const userController = {
       await followService.toggleFollow(username, request.user!.email);
       return response.status(200).send();
     } catch (error) {
-      if (error instanceof Error) {
-        return response.status(400).send({ message: error.message });
-      }
       return response.status(400).json(error);
     }
   },
@@ -343,9 +328,6 @@ export const userController = {
         users,
       });
     } catch (error) {
-      if (error instanceof Error) {
-        return response.status(400).send({ message: error.message });
-      }
       return response.status(400).json(error);
     }
   },
