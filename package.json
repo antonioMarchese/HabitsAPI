@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsup src && npx prisma migrate deploy",
+    "build": "tsup src",
     "start": "node dist/server.js"
   },
   "keywords": [],
